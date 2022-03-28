@@ -1,5 +1,8 @@
 package com.ibm.service;
 
+import com.ibm.exception.GeoLocationClientException;
+import com.ibm.exception.GeoLocationServerException;
+
 import java.util.List;
 import java.util.Map;
 
@@ -14,8 +17,8 @@ public interface IGeoLocationService {
      * @param fields Optional set of fields to be returned to the response.
      * @return Map key - field name. value - value of the corresponding field. For example - city -> toronto.
      */
-    Map<String, String> getGeoLocationForIp(String ip, List<String>... fields) throws Exception;
+    Map<String, String> getGeoLocationForIp(String ip, List<String>... fields) throws GeoLocationClientException, GeoLocationServerException;
 
-    String getCityForIp(String ip) throws Exception;
+    String getCityForIp(String ip) throws GeoLocationClientException, GeoLocationServerException;
 
 }
