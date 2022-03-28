@@ -18,6 +18,9 @@ public class ApiExceptionHandler {
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
+    /**
+     * Handles the invalid input provided in request. Thrown by javax validation framework
+     */
     public ResponseEntity<ErrorResponse> handleValidationExceptions(
             MethodArgumentNotValidException ex) {
 
@@ -38,73 +41,44 @@ public class ApiExceptionHandler {
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidJSON(
-            HttpMessageNotReadableException ex) {
-
-        ErrorResponse errorResponse = new ErrorResponse(
-                HttpStatus.BAD_REQUEST.value(),
-                "Malformed input json"
-        );
-
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(errorResponse);
+    /**
+     * Handling of the exception thrown for invalid input JSON
+     */
+    public ResponseEntity<ErrorResponse> handleInvalidJSON(HttpMessageNotReadableException ex)
+    {
+        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST);
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(GeoLocationClientException.class)
-    public ResponseEntity<ErrorResponse> handleValidationExceptions(
-            GeoLocationClientException ex) {
-
-
-        ErrorResponse errorResponse = new ErrorResponse(
-                HttpStatus.BAD_REQUEST.value(),
-                ex.getLocalizedMessage()
-        );
-
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(errorResponse);
+    /**
+     * Thrown when the api server is sent invalid client data(ip)
+     */
+    public ResponseEntity<ErrorResponse> handleValidationExceptions(GeoLocationClientException ex)
+    {
+        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST);
     }
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(GeoLocationServerException.class)
-    public ResponseEntity<ErrorResponse> handleValidationExceptions(
-            GeoLocationServerException ex) {
-
-
-        ErrorResponse errorResponse = new ErrorResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                ex.getLocalizedMessage()
-        );
-
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(errorResponse);
+    /**
+     * Thrown when the api server is down
+     */
+    public ResponseEntity<ErrorResponse> handleValidationExceptions(GeoLocationServerException ex)
+    {
+        return buildErrorResponse(ex, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
 
-    private ResponseEntity<ErrorResponse> buildErrorResponse(
-            Exception exception,
-            HttpStatus httpStatus
-    ) {
-        return buildErrorResponse(
-                exception,
-                exception.getMessage(),
-                httpStatus
-                );
-    }
-
-    private ResponseEntity<ErrorResponse> buildErrorResponse(
-            Exception exception,
-            String message,
-            HttpStatus httpStatus
-    ) {
-        ErrorResponse errorResponse = new ErrorResponse(
-                httpStatus.value(),
-                exception.getMessage()
-        );
-
+    /**
+     * Build the consistent error response for all exception scenarios.
+     * @param exception - Exception thrown by the api
+     * @param httpStatus - Httpstatus to be set
+     * @return ErrorResponse
+     */
+    private ResponseEntity<ErrorResponse> buildErrorResponse(Exception exception, HttpStatus httpStatus)
+    {
+        ErrorResponse errorResponse = new ErrorResponse(httpStatus.value(), exception.getMessage());
         return ResponseEntity.status(httpStatus).body(errorResponse);
     }
 
