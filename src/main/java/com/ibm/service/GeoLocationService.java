@@ -1,6 +1,9 @@
 package com.ibm.service;
 
 import com.ibm.constants.GeoLocationFields;
+import com.ibm.exception.GeoLocationClientException;
+import com.ibm.exception.GeoLocationServerException;
+import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
@@ -19,7 +22,7 @@ public class GeoLocationService implements IGeoLocationService{
     private String geoLocationEndpoint;
 
     @Override
-    public Map<String, String> getGeoLocationForIp(String ip, List<String>... fields) throws Exception {
+    public Map<String, String> getGeoLocationForIp(String ip, List<String>... fields) throws GeoLocationClientException, GeoLocationServerException {
 
         RestTemplate restTemplate = new RestTemplate();
 
@@ -27,16 +30,29 @@ public class GeoLocationService implements IGeoLocationService{
                 new ParameterizedTypeReference<>() {};
         RequestEntity<Void> request = RequestEntity.get(geoLocationEndpoint + ip)
                 .accept(MediaType.APPLICATION_JSON).build();
-        Map<String, String> geoLocationJsonMap = restTemplate.exchange(request, responseType).getBody();
+        Map<String, String> geoLocationJsonMap = null;
+
+        try {
+            geoLocationJsonMap = restTemplate.exchange(request, responseType).getBody();
+        } catch (Exception ex) { // catch all exception for the service
+            throw new GeoLocationServerException("Geo location api server error");
+        }
 
         if (GeoLocationFields.FAIL.equalsIgnoreCase(geoLocationJsonMap.get(GeoLocationFields.STATUS))) {
-            throw new Exception(geoLocationJsonMap.get(GeoLocationFields.MESSAGE));
+            throw new GeoLocationClientException(geoLocationJsonMap.get(GeoLocationFields.MESSAGE));
         }
+
+        // Business Validation:
+        // If the IP is not in Canada, return error message that user is not elligible to register
+        if (GeoLocationFields.CANADA.equalsIgnoreCase(geoLocationJsonMap.get(GeoLocationFields.COUNTRY))) {
+            throw new GeoLocationClientException("User is not eligible to register!");
+        }
+
         return geoLocationJsonMap;
     }
 
     @Override
-    public String getCityForIp(String ip) throws Exception {
+    public String getCityForIp(String ip) throws GeoLocationClientException, GeoLocationServerException {
         Map<String, String> geoLocationMap = getGeoLocationForIp(ip, Arrays.asList(GeoLocationFields.CITY));
         return geoLocationMap.get(GeoLocationFields.CITY);
     }

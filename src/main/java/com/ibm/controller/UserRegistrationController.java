@@ -1,5 +1,7 @@
 package com.ibm.controller;
 
+import com.ibm.exception.GeoLocationClientException;
+import com.ibm.exception.GeoLocationServerException;
 import com.ibm.model.User;
 import com.ibm.model.UserResponse;
 import com.ibm.service.IGeoLocationService;
@@ -15,15 +17,16 @@ import java.util.UUID;
 @RequestMapping("/api/register")
 public class UserRegistrationController {
 
+    // TODO: Logging and unit tests.
+
     private final IGeoLocationService geoLocationService;
 
     public UserRegistrationController(IGeoLocationService geoLocationService) {
         this.geoLocationService = geoLocationService;
     }
 
-
     @PostMapping("/")
-    public UserResponse registerUser(@Valid @RequestBody User userRequest) throws Exception {
+    public UserResponse registerUser(@Valid @RequestBody User userRequest) throws GeoLocationClientException, GeoLocationServerException {
         UserResponse userResponse = new UserResponse();
         String city = geoLocationService.getCityForIp(userRequest.getIpAddress());
         userResponse.setWelcomeMessage("Welcome : " + userRequest.getUserName() + " from " + city);
