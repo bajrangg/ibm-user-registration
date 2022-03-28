@@ -3,7 +3,6 @@ package com.ibm.service;
 import com.ibm.constants.GeoLocationFields;
 import com.ibm.exception.GeoLocationClientException;
 import com.ibm.exception.GeoLocationServerException;
-import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
@@ -18,19 +17,23 @@ import java.util.Map;
 @Service
 public class GeoLocationService implements IGeoLocationService{
 
+    private final RestTemplate restTemplate;
+
     @Value("${geo.location.api.endpoint}")
     private String geoLocationEndpoint;
 
+    public GeoLocationService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
+
     @Override
     public Map<String, String> getGeoLocationForIp(String ip, List<String>... fields) throws GeoLocationClientException, GeoLocationServerException {
-
-        RestTemplate restTemplate = new RestTemplate();
 
         ParameterizedTypeReference<Map<String, String>> responseType =
                 new ParameterizedTypeReference<>() {};
         RequestEntity<Void> request = RequestEntity.get(geoLocationEndpoint + ip)
                 .accept(MediaType.APPLICATION_JSON).build();
-        Map<String, String> geoLocationJsonMap = null;
+        Map<String, String> geoLocationJsonMap;
 
         try {
             geoLocationJsonMap = restTemplate.exchange(request, responseType).getBody();
@@ -44,7 +47,7 @@ public class GeoLocationService implements IGeoLocationService{
 
         // Business Validation:
         // If the IP is not in Canada, return error message that user is not elligible to register
-        if (GeoLocationFields.CANADA.equalsIgnoreCase(geoLocationJsonMap.get(GeoLocationFields.COUNTRY))) {
+        if (!GeoLocationFields.CANADA.equalsIgnoreCase(geoLocationJsonMap.get(GeoLocationFields.COUNTRY))) {
             throw new GeoLocationClientException("User is not eligible to register!");
         }
 
