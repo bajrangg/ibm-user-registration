@@ -39,6 +39,17 @@ class UserRegistrationControllerTest {
     }
 
     @Test
+    public void whenPostRequestToRegisterUserAndInvalidJson_thenBadRequest() throws Exception {
+        mockMvc.perform(post("/api/register")
+                        //.contentType(MediaType.APPLICATION_JSON)
+                        .content("{}}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").isNotEmpty())
+                .andExpect(jsonPath("$.status").isNotEmpty())
+        ;
+    }
+
+    @Test
     public void whenPostRequestToRegisterUserAndInvalidUser_thenBadRequest() throws Exception {
         mockMvc.perform(post("/api/register")
                         .contentType(MediaType.APPLICATION_JSON)
