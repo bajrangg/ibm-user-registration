@@ -14,18 +14,17 @@ import javax.validation.Valid;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/register")
+@RequestMapping("/api")
 public class UserRegistrationController {
 
     // TODO: Logging and unit tests.
-
     private final IGeoLocationService geoLocationService;
 
     public UserRegistrationController(IGeoLocationService geoLocationService) {
         this.geoLocationService = geoLocationService;
     }
 
-    @PostMapping("/")
+    @PostMapping("/register")
     public UserResponse registerUser(@Valid @RequestBody User userRequest) throws GeoLocationClientException, GeoLocationServerException {
         UserResponse userResponse = new UserResponse();
         String city = geoLocationService.getCityForIp(userRequest.getIpAddress());

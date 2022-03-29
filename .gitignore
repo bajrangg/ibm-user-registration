@@ -37,3 +37,6 @@ out/
 .vscode/
 
 notes.txt
+.DS_Store
+backup*
+
