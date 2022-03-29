@@ -3,6 +3,8 @@ package com.ibm.service;
 import com.ibm.constants.GeoLocationFields;
 import com.ibm.exception.GeoLocationClientException;
 import com.ibm.exception.GeoLocationServerException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
@@ -16,6 +18,8 @@ import java.util.Map;
 
 @Service
 public class GeoLocationService implements IGeoLocationService{
+
+    private static Logger logger = LoggerFactory.getLogger(GeoLocationService.class);
 
     private final RestTemplate restTemplate;
 
@@ -38,16 +42,19 @@ public class GeoLocationService implements IGeoLocationService{
         try {
             geoLocationJsonMap = restTemplate.exchange(request, responseType).getBody();
         } catch (Exception ex) { // catch all exception for the service
+            logger.error("Server error occurred while connecting!");
             throw new GeoLocationServerException("Geo location api server error");
         }
 
         if (GeoLocationFields.FAIL.equalsIgnoreCase(geoLocationJsonMap.get(GeoLocationFields.STATUS))) {
+            logger.error("Invalid client input error.");
             throw new GeoLocationClientException(geoLocationJsonMap.get(GeoLocationFields.MESSAGE));
         }
 
         // Business Validation:
         // If the IP is not in Canada, return error message that user is not elligible to register
         if (!GeoLocationFields.CANADA.equalsIgnoreCase(geoLocationJsonMap.get(GeoLocationFields.COUNTRY))) {
+            logger.error("User's IP address is not in Canada. Not allowed to register.");
             throw new GeoLocationClientException("User is not eligible to register!");
         }
 
